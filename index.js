@@ -1,9 +1,20 @@
-const request = require('request');
+const axios = require('axios')
+const fs = require('fs');
+// const cheerio = require('cheerio');
 
-const URL = 'https://www.mirgaza.ru/catalog/';
 
-request(URL, function (err, res, body) {
-    if (err) throw err;
-    console.log(body);
-    console.log(res.statusCode);
-});
+
+function getDataFromCatalog() {
+    let URL = 'https://www.mirgaza.ru/catalog/';
+    return axios({
+        method: "GET",
+        url: URL
+    });
+}
+
+getDataFromCatalog()
+    .then(res => {
+        fs.writeFile
+    })
+    .catch(err => console.error(err))
+
