@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -15,5 +16,9 @@
   "bugs": {
     "url": "https://github.com/SonarTranssoft/gbo-parser/issues"
   },
-  "homepage": "https://github.com/SonarTranssoft/gbo-parser#readme"
+  "homepage": "https://github.com/SonarTranssoft/gbo-parser#readme",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "xml-js": "^1.6.11"
+  }
 }
