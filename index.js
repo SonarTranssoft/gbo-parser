@@ -1,50 +1,38 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const Chapter = require('./models/chapter');
+const Product = require('./models/product');
 
 const BASE_URL = 'https://www.mirgaza.ru';
 
 /** Сделать запрос, и вернуть результат калалога с id равным link */
-async function getCatalog(link = '/catalog/') {
+async function getCatalog(link) {
 
-  // результат уже как удобно сформируй
-  const result = [];
+    // результат уже как удобно сформируй
+    const result = [];
 
-  try {
+    try {
 
-    const {data} = await axios({
-      method: 'GET',
-      url: BASE_URL + link
-    });
+        const {data} = await axios({
+            method: 'GET',
+            url: BASE_URL + link
+        });
 
-    const $ = cheerio.load(data);
+        const $ = cheerio.load(data);
 
-    // тут проверь, если в результате есть $('.group_list')
-    // то обрабатывай как каталог с подкаталогами
-    // если есть $('.shop_block'), то обрабатывай как товарами
-    // т.е. запомни ссылки на товары, а после того как все товары получишь, уже выполняй функцию парса данных с товара
-
-    // тут обрабатываешь результат запроса
-    // не использую костыли вида toArray()
-    // лучше перебирай все элементы так:
-
-    $('.group_list').find('.group_list_item').each(function() {
-      // each это функция перебора элементов массива cheerio
-      // конструкция $(this) тебе даст cheerio элемент каждого из .group_list_item
-
-      result.push({
-        title: $(this).attr('title'),
-        link: $(this).attr('href')
-      });
-
-    });
-
-    return result;
-
-  } catch (e) {
-
-    throw new Error(e);
-
-  }
+        if ($('.group_list').length) {
+            $('.group_list').find('.group_list_item').each(function () {
+                result.push(new Chapter($(this).attr('title'), $(this).attr('href')))
+            });
+        } else if ($('.shop_block').length) {
+            $('.shop_table').find('div.description_sell').each(function () {
+                result.push(new Product($(this).text().trim(), $(this.children).attr('href')))
+            });
+        }
+        return result;
+    } catch (e) {
+        throw new Error(e);
+    }
 
 }
 
@@ -54,18 +42,18 @@ async function getCatalog(link = '/catalog/') {
 
 async function init() {
 
-  const catalog = await getCatalog(); // это бы тоже в try/catch обернуть, но для себя и так пойдет
+    const catalog = await getCatalog('/catalog/cng-metan/'); // это бы тоже в try/catch обернуть, но для себя и так пойдет
 
-  console.log(catalog);
+    console.log('Каталог', catalog);
 
-  // тут к примеру можно использовать
-  for (let i = 0; i < catalog.length; i++) {
-    const subCatalog =  await getCatalog(catalog[i].link);
-    
-    console.log(subCatalog);
+    // тут к примеру можно использовать
+    for (let i = 0; i < catalog.length; i++) {
+        const subCatalog = await getCatalog(catalog[i].link);
 
-    break;
-  }
+        console.log('Подкаталог', subCatalog);
+
+        break;
+    }
 
 }
 
