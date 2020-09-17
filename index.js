@@ -1,8 +1,5 @@
-const axios = require('axios')
-const fs = require('fs');
-// const cheerio = require('cheerio');
-
-
+const axios = require('axios');
+const cheerio = require('cheerio');
 
 function getDataFromCatalog() {
     let URL = 'https://www.mirgaza.ru/catalog/';
@@ -14,7 +11,11 @@ function getDataFromCatalog() {
 
 getDataFromCatalog()
     .then(res => {
-        console.log(res.data);
+        const $ = cheerio.load(res.data);
+        let listOfCatalog = $('.catalog').children().toArray();
+        let arrayOfIds = listOfCatalog.map(el => el.attribs.id);
+        let chapters = arrayOfIds.map(el => $('#' + el).text().trim());
+        console.log(chapters);
     })
-    .catch(err => console.error(err))
+    .catch(err => console.error(err));
 
