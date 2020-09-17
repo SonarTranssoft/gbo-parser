@@ -14,7 +14,7 @@ function getDataFromCatalog() {
 
 getDataFromCatalog()
     .then(res => {
-        fs.writeFile
+        console.log(res.data);
     })
     .catch(err => console.error(err))
 
