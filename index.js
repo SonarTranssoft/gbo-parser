@@ -1,5 +1,6 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const tunnel = require('tunnel')
 const Excel = require('exceljs');
 const Chapter = require('./models/chapter');
 const Product = require('./models/product');
@@ -20,21 +21,21 @@ async function getCatalog(link) {
   // результат уже как удобно сформируй
   const result = [];
   const chapters = [];
+  const agent = tunnel.httpsOverHttp({
+    proxy: {
+      host: '193.31.103.37',
+      port: 9477,
+      proxyAuth: 'CcxHv8:6ymQqU'
+    }
+  });
 
   try {
     console.log('Сканирую страницу...' + link);
     const {data} = await axios({
       method: 'GET',
       url: BASE_URL + link,
-      // proxy: {
-      //   host: '193.31.103.37',
-      //   port: 9477,
-      //   auth: {
-      //     username: 'CcxHv8',
-      //     password: '6ymQqU'
-      //   },
-      //   protocol: 'HTTPS'
-      // }
+      httpsAgent: agent,
+      proxy: false
     });
 
     const $ = cheerio.load(data);
@@ -54,9 +55,9 @@ async function getCatalog(link) {
 
     } else if ($('.shop_block').length) {
       console.log(link + ' Дошли до товаров в этой категории');
-      // $('.shop_table').find('div.description_sell').each(function () {
-      //   result.push(new Product($(this).text().trim(), $(this).find('a').attr('href')))
-      // });
+      $('.shop_table').find('div.description_sell').each(function () {
+        result.push(new Chapter($(this).text().trim(), link, true, $(this).find('a').attr('href')))
+      });
     }
 
     return result;
@@ -95,6 +96,9 @@ async function init() {
     // получаем подкаталоги первого уровня (пример: "Метановое оборудование")
     const catalog1 = await getCatalog('/catalog/');
 
+    const arr = catalog1.filter(e => e.isProduct);
+    console.log(arr);
+
     // //перебираю массив подкаталогов 1-го уровня
     // for (let i = 0; i < catalog1.length; i++) {
     //   // получаем подкаталоги второго уровня (пример: "Комплекты ГБО Метан")
@@ -110,7 +114,6 @@ async function init() {
     //   }
     // }
     console.log('Готово');
-    console.log(catalog1)
   // } catch (e) {
   //   throw new Error(e);
   // }
@@ -118,4 +121,3 @@ async function init() {
 
 
 init();
-
