@@ -1,6 +1,8 @@
 class Chapter {
-    constructor(title, link) {
+    constructor(title, parentLink, isProduct,link) {
         this.title = title;
+        this.parentLink = parentLink;
+        this.isProduct = isProduct;
         this.link = link;
     }
 }

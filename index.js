@@ -19,29 +19,51 @@ async function getCatalog(link) {
 
   // результат уже как удобно сформируй
   const result = [];
+  const chapters = [];
 
   try {
+    console.log('Сканирую страницу...' + link);
     const {data} = await axios({
       method: 'GET',
-      url: BASE_URL + link
+      url: BASE_URL + link,
+      // proxy: {
+      //   host: '193.31.103.37',
+      //   port: 9477,
+      //   auth: {
+      //     username: 'CcxHv8',
+      //     password: '6ymQqU'
+      //   },
+      //   protocol: 'HTTPS'
+      // }
     });
 
     const $ = cheerio.load(data);
 
     if ($('.group_list').length) {
       $('.group_list').find('.group_list_item').each(function () {
-        result.push(new Chapter($(this).attr('title'), $(this).attr('href')))
+        chapters.push(new Chapter($(this).attr('title'), link, false, $(this).attr('href')))
       });
+
+      result.push(...chapters);
+
+      for (let i = 0; i < chapters.length; i++) {
+        result.push(...await getCatalog(chapters[i].link));
+      }
+
+      console.log('Страница ' + link + ' просканирована');
+
     } else if ($('.shop_block').length) {
-      $('.shop_table').find('div.description_sell').each(function () {
-        result.push(new Product($(this).text().trim(), $(this).find('a').attr('href')))
-      });
+      console.log(link + ' Дошли до товаров в этой категории');
+      // $('.shop_table').find('div.description_sell').each(function () {
+      //   result.push(new Product($(this).text().trim(), $(this).find('a').attr('href')))
+      // });
     }
+
     return result;
+
   } catch (e) {
     throw new Error(e);
   }
-
 }
 
 async function getProductDataItem(link) {
@@ -52,7 +74,7 @@ async function getProductDataItem(link) {
     const {data} = await axios({
       method: "GET",
       url: BASE_URL + link
-    })
+    });
 
     const $ = cheerio.load(data);
 
@@ -67,34 +89,31 @@ async function getProductDataItem(link) {
   }
 }
 
-
-// чтобы рабоать с await, нужно выполнять промисы с async функции
-// т.е. нужно запускать не в корне скрипта, примерно как ниже
-
 async function init() {
 
-  try {
+  // try {
     // получаем подкаталоги первого уровня (пример: "Метановое оборудование")
     const catalog1 = await getCatalog('/catalog/');
 
-    //перебираю массив подкаталогов 1-го уровня
-    for (let i = 0; i < catalog1.length; i++) {
-      // получаем подкаталоги второго уровня (пример: "Комплекты ГБО Метан")
-      const catalog2 = await getCatalog(catalog1[i].link);
-      if (catalog2[i] instanceof Chapter) {
-        //Обхожу каталог уровня 2 (пример: "ГБО Метан")
-        for (let b = 0; b < catalog2.length; b++) {
-          //не проверяю здесь содержимое, т.к. заведомо известно, что здесь уже находятся конечные данные
-          const productData = await getProductDataItem(catalog2[b].link);
-        }
-      } else {
-        const productData = await getProductDataItem(catalog1[i].link)
-      }
-    }
+    // //перебираю массив подкаталогов 1-го уровня
+    // for (let i = 0; i < catalog1.length; i++) {
+    //   // получаем подкаталоги второго уровня (пример: "Комплекты ГБО Метан")
+    //   const catalog2 = await getCatalog(catalog1[i].link);
+    //   if (catalog1[i] instanceof Chapter) {
+    //     //Обхожу каталог уровня 2 (пример: "ГБО Метан")
+    //     for (let b = 0; b < catalog2.length; b++) {
+    //       //не проверяю здесь содержимое, т.к. заведомо известно, что здесь уже находятся конечные данные
+    //       const productData = await getProductDataItem(catalog2[b].link);
+    //     }
+    //   } else {
+    //     const productData = await getProductDataItem(catalog1[i].link)
+    //   }
+    // }
     console.log('Готово');
-  } catch (e) {
-    throw new Error(e);
-  }
+    console.log(catalog1)
+  // } catch (e) {
+  //   throw new Error(e);
+  // }
 }
 
 
