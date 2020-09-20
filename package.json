@@ -20,6 +20,7 @@
   "dependencies": {
     "axios": "^0.20.0",
     "cheerio": "^1.0.0-rc.3",
+    "exceljs": "^4.1.1",
     "xml-js": "^1.6.11"
   }
 }
