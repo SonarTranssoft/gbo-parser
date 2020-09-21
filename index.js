@@ -85,13 +85,11 @@ async function getProductDataItem(link) {
       }
     })
 
-    $('div.shop_full_item_tabs').find('.box').each(function () {
-      tempArr.push($(this).text())
-    })
+    tempArr.push($('div.shop_full_item_tabs').find('.box').first().text().trim());
 
-    productData.push(new Product($('img.shop_full_item_img').attr('src'), tempArr[0], tempArr[1], $('span.price_value').text(), tempArr[2]));
+    // productData.push(new Product($('img.shop_full_item_img').attr('src'), tempArr[0], tempArr[1], $('span.price_value').text(), tempArr[2]));
 
-    return productData;
+    return tempArr;
   } catch (error) {
     throw new Error(error)
   }
@@ -106,7 +104,9 @@ async function init() {
     // console.log('Готово');
 
   const arr = await getProductDataItem('/catalog/magistral-i-shlangi/pipe-faro-6-mm-thermoplastic/');
+  // console.log(arr);
   console.log(arr);
+  console.log(arr.length);
 }
 
 
