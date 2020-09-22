@@ -65,7 +65,7 @@ async function getCatalog(link) {
 
 async function getProductDataItem(link) {
 
-    const tempArr = [];
+    const tempArr = []
     const productData = [];
 
     try {
@@ -86,7 +86,8 @@ async function getProductDataItem(link) {
 
         tempArr.push($('div.shop_full_item_tabs').find('.box').first().text().trim());
 
-        return new Product($('img.shop_full_item_img').attr('src'), tempArr[0], tempArr[1], $('span.price_value').text(), tempArr[2], tempArr[tempArr.length - 1], $('div.path').find('a')[length - 1].text.trim());
+        productData.push(new Product($('img.shop_full_item_img').attr('src'), tempArr[0], tempArr[1], $('span.price_value').text(), tempArr[2], tempArr[tempArr.length - 1], $('div.path').find('a')[length - 1].text.trim()));
+        return productData
     } catch (error) {
         throw new Error(error)
     }
@@ -94,23 +95,25 @@ async function getProductDataItem(link) {
 
 async function init() {
 
-    try {
-
-        const catalog1 = await getCatalog('/catalog/');
-        const arr = catalog1.filter(e => e.isProduct);
-
-        console.log('Список каталогов с товарами получен. Начинаю получение данных по каждому товару');
-
-        const arrayOfProducts = await arr.map(el => {
-            return getProductDataItem(el.link)
-        })
-        for (let i = 0; i < arrayOfProducts; i++) {
-            console.log(arrayOfProducts[i]);
-            break;
-        }
-    } catch (e) {
-        throw new Error()
-    }
+    // try {
+    //
+    //     const catalog1 = await getCatalog('/catalog/');
+    //     const arr = catalog1.filter(e => e.isProduct);
+    //
+    //     console.log('Список каталогов с товарами получен. Начинаю получение данных по каждому товару');
+    //
+    //     const arrayOfProducts = await arr.map(el => {
+    //         return getProductDataItem(el.link)
+    //     })
+    //     for (let i = 0; i < arrayOfProducts; i++) {
+    //         console.log(arrayOfProducts[i]);
+    //         break;
+    //     }
+    // } catch (e) {
+    //     throw new Error()
+    // }
+    let a = await getProductDataItem('/catalog/komplekty-gbo/komplekt-metan-4-tsil-poletron-263-tomasetto-at-12-tip-f-36-60-165kw/');
+    console.log(a);
 }
 
 
