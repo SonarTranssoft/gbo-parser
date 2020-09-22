@@ -68,28 +68,28 @@ async function getProductDataItem(link) {
     const tempArr = []
     const navArr = []
 
-        const {data} = await axios({
-            method: "GET",
-            url: BASE_URL + link,
-            httpsAgent: agent,
-            proxy: false
-        });
+    const {data} = await axios({
+        method: "GET",
+        url: BASE_URL + link,
+        httpsAgent: agent,
+        proxy: false
+    });
 
-        const $ = cheerio.load(data);
+    const $ = cheerio.load(data);
 
-        $('div.shop_full_item_right').find('span.full_title').each(function () {
-            if ($(this).text().length) {
-                tempArr.push($(this).text())
-            }
-        })
+    $('div.shop_full_item_right').find('span.full_title').each(function () {
+        if ($(this).text().length) {
+            tempArr.push($(this).text())
+        }
+    })
 
-        tempArr.push($('div.shop_full_item_tabs').find('.box').first().text().trim());
+    tempArr.push($('div.shop_full_item_tabs').find('.box').first().text().trim());
 
-        $('div.path').find('a').each(function () {
-            navArr.push($(this).text().trim())
-        })
+    $('div.path').find('a').each(function () {
+        navArr.push($(this).text().trim())
+    })
 
-        return new Product($('img.shop_full_item_img').attr('src'), tempArr[0], tempArr[1], $('span.price_value').text(), tempArr[2], tempArr[tempArr.length - 1], navArr[navArr.length - 2]);
+    return new Product($('img.shop_full_item_img').attr('src'), tempArr[0], tempArr[1], $('span.price_value').text(), tempArr[2], tempArr[tempArr.length - 1], navArr[navArr.length - 2]);
 }
 
 async function init() {
@@ -98,19 +98,23 @@ async function init() {
 
         const catalog1 = await getCatalog('/catalog/');
         const arr = catalog1.filter(e => e.isProduct);
+        const arrayOfProducts = [];
 
         console.log('Список каталогов с товарами получен. Начинаю получение данных по каждому товару');
 
-        const arrayOfProducts = await arr.map(el => {
-            return getProductDataItem(el.link)
+        arr.forEach(el => {
+            arrayOfProducts.push(getProductDataItem(el.link));
         })
+
         for (let i = 0; i < arrayOfProducts; i++) {
             console.log(arrayOfProducts[i]);
             break;
         }
 
     } catch (e) {
+
         throw new Error()
+
     }
 }
 
