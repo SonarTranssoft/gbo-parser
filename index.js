@@ -100,16 +100,25 @@ async function init() {
         const arr = catalog1.filter(e => e.isProduct);
         const arrayOfProducts = [];
 
-        console.log('Список каталогов с товарами получен. Начинаю получение данных по каждому товару');
-
-        arr.forEach(el => {
-            arrayOfProducts.push(getProductDataItem(el.link));
-        })
-
-        for (let i = 0; i < arrayOfProducts; i++) {
-            console.log(arrayOfProducts[i]);
+        for (let b = 0; b < arr.length; b++) {
+            console.log(arr[b]);
             break;
         }
+
+        console.log('Список каталогов с товарами получен. Начинаю получение данных по каждому товару');
+
+        for (let i = 0; i < arr.length; i++) {
+            let a = await getProductDataItem(arr[i]);
+            arrayOfProducts.push(a);
+            break
+        }
+
+        console.log(arrayOfProducts);
+
+        // for (let i = 0; i < arrayOfProducts; i++) {
+        //     console.log(arrayOfProducts[i]);
+        //     break;
+        // }
 
     } catch (e) {
 
