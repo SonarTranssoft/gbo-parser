@@ -5,14 +5,18 @@ class ProductFull {
 // Детальное описание
 // цена
 // производитель
-    constructor(imgSrc, title, vendorCode = 0, cost = 0, manufacturerCode = 0, description = '-', parent) {
-        this.imgSrc = imgSrc;
-        this.title = title;
-        this.vendorCode = vendorCode;
-        this.cost = cost;
-        this.manufacturerCode = manufacturerCode;
-        this.description = description;
-        this.parent = parent;
+    constructor(options) {
+        if (typeof options !== 'object') {
+            throw new Error('options must be an object');
+        }
+
+        this.imgSrc = options.imgSrc;
+        this.title = options.title;
+        this.parent = options.parent || null;
+        this.vendorCode = options.vendorCode || 0;
+        this.cost = options.cost || 0;
+        this.manufacturerCode = options.manufacturerCode || 0;
+        this.description = options.description || '-';
     }
 }
 

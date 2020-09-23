@@ -66,8 +66,7 @@ async function getCatalog(link) {
 
 async function getProductDataItem(link) {
 
-    const tempArr = []
-    const navArr = []
+    const params = {};
 
     try {
 
@@ -78,22 +77,23 @@ async function getProductDataItem(link) {
             proxy: false
         });
 
-
         const $ = cheerio.load(data);
 
-        $('div.shop_full_item_right').find('span.full_title').each(function () {
-            if ($(this).text().length) {
-                tempArr.push($(this).text())
+        $('div.shop_full_item_right > div').each(function() {
+            if ($(this).find('.full_title').length) {
+                params[$($(this).contents().get(0)).text().trim()] = $($(this).contents().get(1)).text().trim();
             }
-        })
+        });
 
-        tempArr.push($('div.shop_full_item_tabs').find('.box').first().text().trim());
-
-        $('div.path').find('a').each(function () {
-            navArr.push($(this).text().trim())
-        })
-
-        return new Product($('img.shop_full_item_img').attr('src'), tempArr[0], tempArr[1], $('span.price_value').text(), tempArr[2], tempArr[tempArr.length - 1], navArr[navArr.length - 2]);
+        return new Product({
+            imgSrc: $('img.shop_full_item_img').attr('src'),
+            title: params["Полное наименование:"] || '-',
+            vendorCode: params["Код товара:"] || "-",
+            cost: $('span.price_value').text(),
+            manufacturerCode: params["Артикул производителя:"] || "-",
+            description: $('div.shop_full_item_tabs').find('.box').first().text().trim(),
+            parent: $('.prev_button').first().attr('href')
+        });
 
     } catch (e) {
         console.log(e);
