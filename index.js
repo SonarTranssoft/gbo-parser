@@ -68,28 +68,35 @@ async function getProductDataItem(link) {
     const tempArr = []
     const navArr = []
 
-    const {data} = await axios({
-        method: "GET",
-        url: BASE_URL + link,
-        httpsAgent: agent,
-        proxy: false
-    });
+    try {
 
-    const $ = cheerio.load(data);
+        const {data} = await axios({
+            method: "GET",
+            url: BASE_URL + encodeURIComponent(link),
+            httpsAgent: agent,
+            proxy: false
+        });
 
-    $('div.shop_full_item_right').find('span.full_title').each(function () {
-        if ($(this).text().length) {
-            tempArr.push($(this).text())
-        }
-    })
 
-    tempArr.push($('div.shop_full_item_tabs').find('.box').first().text().trim());
+        const $ = cheerio.load(data);
 
-    $('div.path').find('a').each(function () {
-        navArr.push($(this).text().trim())
-    })
+        $('div.shop_full_item_right').find('span.full_title').each(function () {
+            if ($(this).text().length) {
+                tempArr.push($(this).text())
+            }
+        })
 
-    return new Product($('img.shop_full_item_img').attr('src'), tempArr[0], tempArr[1], $('span.price_value').text(), tempArr[2], tempArr[tempArr.length - 1], navArr[navArr.length - 2]);
+        tempArr.push($('div.shop_full_item_tabs').find('.box').first().text().trim());
+
+        $('div.path').find('a').each(function () {
+            navArr.push($(this).text().trim())
+        })
+
+        return new Product($('img.shop_full_item_img').attr('src'), tempArr[0], tempArr[1], $('span.price_value').text(), tempArr[2], tempArr[tempArr.length - 1], navArr[navArr.length - 2]);
+
+    } catch (e) {
+        console.log(e);
+    }
 }
 
 async function init() {
@@ -100,17 +107,17 @@ async function init() {
         const arr = catalog1.filter(e => e.isProduct);
         const arrayOfProducts = [];
 
-        for (let b = 0; b < arr.length; b++) {
-            console.log(arr[b]);
-            break;
-        }
-
         console.log('Список каталогов с товарами получен. Начинаю получение данных по каждому товару');
 
         for (let i = 0; i < arr.length; i++) {
-            let a = await getProductDataItem(arr[i]);
-            arrayOfProducts.push(a);
-            break
+            try {
+                let a = await getProductDataItem(arr[i].link);
+                console.log(a)
+                arrayOfProducts.push(a);
+            } catch (e) {
+                throw new Error(e)
+            }
+
         }
 
         console.log(arrayOfProducts);
@@ -122,7 +129,7 @@ async function init() {
 
     } catch (e) {
 
-        throw new Error()
+        throw new Error(e)
 
     }
 }
