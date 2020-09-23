@@ -1,5 +1,6 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const sharp = require('sharp');
 const Excel = require('exceljs');
 const Chapter = require('./models/chapter');
 const Product = require('./models/productFull');
@@ -72,7 +73,7 @@ async function getProductDataItem(link) {
 
         const {data} = await axios({
             method: "GET",
-            url: BASE_URL + encodeURIComponent(link),
+            url: BASE_URL + link,
             httpsAgent: agent,
             proxy: false
         });
@@ -99,6 +100,17 @@ async function getProductDataItem(link) {
     }
 }
 
+function downloadFileFromUrl(url) {
+
+    return axios
+        .get(BASE_URL + url, {
+            responseType: "arraybuffer"
+        })
+        .then(res => {
+            return Buffer.from(res.data, 'binary')
+        })
+}
+
 async function init() {
 
     try {
@@ -112,7 +124,6 @@ async function init() {
         for (let i = 0; i < arr.length; i++) {
             try {
                 let a = await getProductDataItem(arr[i].link);
-                console.log(a)
                 arrayOfProducts.push(a);
             } catch (e) {
                 throw new Error(e)
@@ -120,17 +131,24 @@ async function init() {
 
         }
 
-        console.log(arrayOfProducts);
+        console.log(arrayOfProducts.length);
+        console.log('Начинаю загрузку изображений');
 
-        // for (let i = 0; i < arrayOfProducts; i++) {
-        //     console.log(arrayOfProducts[i]);
-        //     break;
-        // }
+        //Хочу обойти массив полученных данных, чтобы загрузить на диск изображения, которые потом будут записываться в *.xls файл.
+        // Пока не предусмотрел обрезание до нужного количества пикселей
+        for (let count = 0; count < arrayOfProducts.length; count++) {
+            let str = arrayOfProducts[count].imgSrc;
+            let str1 = str.lastIndexOf('/') + 1;
+            const imageBuffer = downloadFileFromUrl(str);
+
+            //Хочу сохранить изображения в отдельный файлик
+            imageBuffer.then(val => {
+                sharp(val).toFile(__dirname + './images/' + str.substring(str1, str.length))
+            })
+        }
 
     } catch (e) {
-
         throw new Error(e)
-
     }
 }
 
