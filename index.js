@@ -13,6 +13,7 @@ const agent = tunnel.httpsOverHttp({
     }
 });
 
+const globalCatalog = new Map();
 const BASE_URL = 'https://www.mirgaza.ru';
 
 /** Сделать запрос, и вернуть результат калалога с id равным link */
@@ -36,6 +37,10 @@ async function getCatalog(link) {
 
         if ($('.group_list').length) {
             $('.group_list').find('.group_list_item').each(function () {
+                if (!globalCatalog.has($(this).attr('title'))) {
+                    globalCatalog.set($(this).attr('title'), [])
+                }
+
                 chapters.push(new Chapter($(this).attr('title'), link, false, $(this).attr('href')))
             });
 
@@ -58,6 +63,25 @@ async function getCatalog(link) {
 
     } catch (e) {
         throw new Error(e);
+    }
+}
+
+async function getSubCatalogs(url) {
+    try {
+        const {data} = await axios({
+            method: "GET",
+            url: BASE_URL + encodeURI(url),
+            httpsAgent: agent,
+            proxy: false
+        })
+
+        const $ = cheerio.load(data);
+
+
+
+    } catch (e) {
+        console.log(BASE_URL + encodeURI(url));
+        console.log(e)
     }
 }
 
@@ -89,7 +113,7 @@ async function getProductDataItem(link) {
             cost: $('span.price_value').text(),
             manufacturerCode: params["Артикул производителя:"] || "-",
             description: $('div.shop_full_item_tabs').find('.box').first().text().trim(),
-            parent: $('[itemscope="itemscope"]').last().prev().prev().text().trim()
+            parent: $('div.catalog_group_h1').text()
         });
 
     } catch (e) {
