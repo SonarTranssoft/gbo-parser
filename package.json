@@ -20,6 +20,8 @@
   "dependencies": {
     "axios": "^0.20.0",
     "cheerio": "^1.0.0-rc.3",
+    "cli-progress": "^3.8.2",
+    "colors": "^1.4.0",
     "exceljs": "^4.1.1",
     "sharp": "^0.26.1",
     "tunnel": "0.0.6",
