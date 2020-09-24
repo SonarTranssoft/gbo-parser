@@ -69,7 +69,7 @@ async function getProductDataItem(link) {
 
         const {data} = await axios({
             method: "GET",
-            url: BASE_URL + link,
+            url: BASE_URL + encodeURI(link),
             httpsAgent: agent,
             proxy: false
         });
@@ -93,6 +93,7 @@ async function getProductDataItem(link) {
         });
 
     } catch (e) {
+        console.log(BASE_URL + link)
         console.log(e);
     }
 }
@@ -112,11 +113,11 @@ async function downloadFileFromUrl(url) {
 
 async function init() {
 
-    try {
+    const arrayOfProductsData = [];
 
+    try {
         const catalog1 = await getCatalog('/catalog/');
         const products = catalog1.filter(e => e.isProduct);
-        const arrayOfProductsData = [];
 
         console.log('Список каталогов с товарами получен. Начинаю получение данных по каждому товару');
 
@@ -124,11 +125,9 @@ async function init() {
             try {
                 let a = await getProductDataItem(products[i].link);
                 arrayOfProductsData.push(a);
-                break;
             } catch (e) {
-                throw new Error(e)
+                console.log(e)
             }
-
         }
 
         console.log(arrayOfProductsData);
