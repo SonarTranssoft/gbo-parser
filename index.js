@@ -13,9 +13,6 @@ const agent = tunnel.httpsOverHttp({
     }
 });
 
-
-var globalCatalog = new Map();
-
 const BASE_URL = 'https://www.mirgaza.ru';
 
 /** Сделать запрос, и вернуть результат калалога с id равным link */
@@ -79,7 +76,7 @@ async function getProductDataItem(link) {
 
         const $ = cheerio.load(data);
 
-        $('div.shop_full_item_right > div').each(function() {
+        $('div.shop_full_item_right > div').each(function () {
             if ($(this).find('.full_title').length) {
                 params[$($(this).contents().get(0)).text().trim()] = $($(this).contents().get(1)).text().trim();
             }
@@ -92,7 +89,7 @@ async function getProductDataItem(link) {
             cost: $('span.price_value').text(),
             manufacturerCode: params["Артикул производителя:"] || "-",
             description: $('div.shop_full_item_tabs').find('.box').first().text().trim(),
-            parent: $('.prev_button').first().attr('href')
+            parent: $('[itemscope="itemscope"]').last().prev().prev().text().trim()
         });
 
     } catch (e) {
@@ -100,15 +97,17 @@ async function getProductDataItem(link) {
     }
 }
 
-function downloadFileFromUrl(url) {
+async function downloadFileFromUrl(url) {
+    const {data} = await axios.get(BASE_URL + url, {
+        responseType: "arraybuffer"
+    });
 
-    return axios
-        .get(BASE_URL + url, {
-            responseType: "arraybuffer"
-        })
-        .then(res => {
-            return Buffer.from(res.data, 'binary')
-        })
+    const buffer = Buffer.from(data, 'binary');
+    const image = url.split('/').pop();
+
+    await sharp(buffer).toFile(__dirname + '/images/' + image);
+
+    return image;
 }
 
 async function init() {
@@ -116,16 +115,15 @@ async function init() {
     try {
 
         const catalog1 = await getCatalog('/catalog/');
-
-        const arr = catalog1.filter(e => e.isProduct);
-        const arrayOfProducts = [];
+        const products = catalog1.filter(e => e.isProduct);
+        const arrayOfProductsData = [];
 
         console.log('Список каталогов с товарами получен. Начинаю получение данных по каждому товару');
 
-        for (let i = 0; i < arr.length; i++) {
+        for (let i = 0; i < products.length; i++) {
             try {
-                let a = await getProductDataItem(arr[i].link);
-                arrayOfProducts.push(a);
+                let a = await getProductDataItem(products[i].link);
+                arrayOfProductsData.push(a);
                 break;
             } catch (e) {
                 throw new Error(e)
@@ -133,23 +131,20 @@ async function init() {
 
         }
 
-        console.log(arrayOfProducts);
-        console.log(arrayOfProducts.length);
+        console.log(arrayOfProductsData);
+        console.log(arrayOfProductsData.length);
         console.log('Начинаю загрузку изображений');
 
         // //Хочу обойти массив полученных данных, чтобы загрузить на диск изображения, которые потом будут записываться в *.xls файл.
         // // Пока не предусмотрел обрезание до нужного количества пикселей
-        // for (let count = 0; count < arrayOfProducts.length; count++) {
-        //     let str = arrayOfProducts[count].imgSrc;
-        //     let str1 = str.lastIndexOf('/') + 1;
-        //     const imageBuffer = downloadFileFromUrl(str);
-        //
-        //     //Хочу сохранить изображения в отдельный файлик
-        //     imageBuffer.then(val => {
-        //         sharp(val).toFile(__dirname + './images/' + str.substring(str1, str.length))
-        //     })
-        // }
-
+        for (let i = 0; i < arrayOfProductsData.length; i++) {
+            try {
+                let imageFileName = await downloadFileFromUrl(arrayOfProductsData[i].imgSrc);
+                console.log(`Файл ${imageFileName} загружен. Осталось загрузить примерно ${arrayOfProductsData.length - i} файлов`);
+            } catch (e) {
+                console.log(e)
+            }
+        }
     } catch (e) {
         throw new Error(e)
     }
