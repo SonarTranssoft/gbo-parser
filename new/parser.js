@@ -8,7 +8,8 @@ const _colors = require('colors');
 module.exports = class Parser {
 
   multibar = new cliProgress.MultiBar({
-    clearOnComplete: false,
+    clearOnComplete: true,
+    stopOnComplete: true,
     hideCursor: true,
     format: 'Parse Progress |' + _colors.cyan('{bar}') + '| {percentage}% || {value}/{total} Pages || Current: {link}',
   }, cliProgress.Presets.shades_grey);
@@ -27,6 +28,7 @@ module.exports = class Parser {
   });
 
   catalog = {};
+  totalProductsAmount = 0;
 
   async getCatalog(force = false) {
 
@@ -34,7 +36,8 @@ module.exports = class Parser {
 
       this.catalog = JSON.parse(fs.readFileSync(__dirname + '/catalog.json', 'utf8'));
       console.log(_colors.yellow('Catalog loaded from cache! Remove file catalog.json to parse again'));
-      return;
+      this.updateProductsAmount();
+      return this.catalog;
 
     }
 
@@ -43,6 +46,21 @@ module.exports = class Parser {
     fs.writeFileSync(__dirname + '/catalog.json', JSON.stringify(this.catalog), 'utf8');
 
     console.log(_colors.green('Catalog loaded!'));
+
+    this.updateProductsAmount();
+    return this.catalog;
+
+  }
+
+  updateProductsAmount() {
+
+    this.totalProductsAmount = 0;
+
+    for (let code in this.catalog) {
+      if (Array.isArray(this.catalog[code].products)) {
+        this.totalProductsAmount += this.catalog[code].products.length;
+      }
+    }
 
   }
 
