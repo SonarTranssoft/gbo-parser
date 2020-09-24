@@ -116,6 +116,7 @@ async function init() {
     try {
 
         const catalog1 = await getCatalog('/catalog/');
+
         const arr = catalog1.filter(e => e.isProduct);
         const arrayOfProducts = [];
 
@@ -125,27 +126,29 @@ async function init() {
             try {
                 let a = await getProductDataItem(arr[i].link);
                 arrayOfProducts.push(a);
+                break;
             } catch (e) {
                 throw new Error(e)
             }
 
         }
 
+        console.log(arrayOfProducts);
         console.log(arrayOfProducts.length);
         console.log('Начинаю загрузку изображений');
 
-        //Хочу обойти массив полученных данных, чтобы загрузить на диск изображения, которые потом будут записываться в *.xls файл.
-        // Пока не предусмотрел обрезание до нужного количества пикселей
-        for (let count = 0; count < arrayOfProducts.length; count++) {
-            let str = arrayOfProducts[count].imgSrc;
-            let str1 = str.lastIndexOf('/') + 1;
-            const imageBuffer = downloadFileFromUrl(str);
-
-            //Хочу сохранить изображения в отдельный файлик
-            imageBuffer.then(val => {
-                sharp(val).toFile(__dirname + './images/' + str.substring(str1, str.length))
-            })
-        }
+        // //Хочу обойти массив полученных данных, чтобы загрузить на диск изображения, которые потом будут записываться в *.xls файл.
+        // // Пока не предусмотрел обрезание до нужного количества пикселей
+        // for (let count = 0; count < arrayOfProducts.length; count++) {
+        //     let str = arrayOfProducts[count].imgSrc;
+        //     let str1 = str.lastIndexOf('/') + 1;
+        //     const imageBuffer = downloadFileFromUrl(str);
+        //
+        //     //Хочу сохранить изображения в отдельный файлик
+        //     imageBuffer.then(val => {
+        //         sharp(val).toFile(__dirname + './images/' + str.substring(str1, str.length))
+        //     })
+        // }
 
     } catch (e) {
         throw new Error(e)

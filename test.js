@@ -5,29 +5,19 @@ const sharp = require('sharp');
 
 const BASE_URL = 'https://www.mirgaza.ru';
 
-// function download(url) {
-//     return axios
-//         .get(BASE_URL + url, {
-//             responseType: "arraybuffer"
-//         })
-//         .then(res => {
-//             return Buffer.from(res.data, 'binary')
-//         })
-// }
-
-// function downloadFileFromUrl(url) {
-//
-//
-//     return axios
-//         .get(BASE_URL + url, {
-//             responseType: "arraybuffer"
-//         })
-//         .then(res => {
-//             return Buffer.from(res.data, 'binary')
-//         })
-// }
-let str = '/upload/shop_1/2/4/2/item_24239/shop_items_catalog_image24239.jpg';
-let str1 = str.lastIndexOf('/') + 1;
-console.log(str.substring(str1, str.length))
+async function downloadFileFromUrl(url) {
+    const {data} = await axios
+        .get(BASE_URL + url, {
+            responseType: "arraybuffer"
+        })
+    let buffer = Buffer.from(data, 'binary')
 
 
+    let str1 = url.lastIndexOf('/') + 1;
+
+    //Хочу сохранить изображения в отдельный файлик
+    await sharp(buffer).toFile(__dirname + './images/' + url.substring(str1, url.length))
+    return url.substring(str1, url.length)
+}
+
+downloadFileFromUrl('/Images/no_image.jpg').then(str => console.log(`Загрузка файла ${str} завершена`))
