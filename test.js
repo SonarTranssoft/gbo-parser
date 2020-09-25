@@ -33,7 +33,7 @@ const BASE_URL = 'https://www.mirgaza.ru';
 //
 // let varName = downloadFileFromUrl('/upload/shop_1/2/6/4/item_26455/shop_items_catalog_image26455.jpg')
 
-async function getCatalog(link) {
+async function getCatalog(link, level = 1) {
 
     // результат уже как удобно сформируй
     const result = [];
@@ -44,7 +44,7 @@ async function getCatalog(link) {
         console.log('Сканирую страницу...' + link);
         const {data} = await axios({
             method: 'GET',
-            url: BASE_URL + link,
+            url: BASE_URL + encodeURI(link),
             httpsAgent: agent,
             proxy: false
         });
@@ -63,7 +63,7 @@ async function getCatalog(link) {
 
                     console.log(`Каталог ${$(elem).attr('title')}`, array);
 
-                    if (!globalCatalog.has($(elem).attr('title'))) {
+                    if (level === 1) {
                         globalCatalog.set($(elem).attr('title'), array);
                     }
 
@@ -77,7 +77,7 @@ async function getCatalog(link) {
 
 
             for (let i = 0; i < chapters.length; i++) {
-                result.push(...await getCatalog(chapters[i].link));
+                result.push(...await getCatalog(chapters[i].link, level++));
             }
 
             console.log('Страница ' + link + ' просканирована');
@@ -86,12 +86,10 @@ async function getCatalog(link) {
             console.log(link + ' Дошли до товаров в этой категории');
             $('.shop_table').find('div.description_sell').each(function () {
                 console.log(`Залезли в каталог с товарами ${$(this).text().trim()}`)
-                globalCatalog.set($(this).text().trim(), null)
                 result.push(new Chapter($(this).text().trim(), link, true, $(this).find('a').attr('href')))
             });
         }
-        console.log('Каталоги', globalCatalog.keys())
-        console.log('Результат', result)
+
         return result;
     } catch (e) {
         throw new Error(e);
@@ -125,10 +123,10 @@ async function getSubCatalogs(url) {
 }
 
 async function start() {
-    const catalog1 = await getCatalog('/catalog/');
-    const a1 = await globalCatalog.keys();
-    console.log(a1)
-    console.log(catalog1)
+    const catalog1 = await getCatalog('/catalog/', 1);
+    const a1 = globalCatalog.keys();
+    console.log('Ключи глобалкаталога', a1)
+    console.log(globalCatalog.size)
 }
 
 start()
