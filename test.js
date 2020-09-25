@@ -54,23 +54,29 @@ async function getCatalog(link) {
 
 
          if ($('.group_list').length) {
-            await $('.group_list').find('.group_list_item').each(async function () {
-                let array = await getSubCatalogs($(this).attr('href'))
-                console.log(`Каталог ${$(this).attr('title')}`, array)
-                if (!globalCatalog.has($(this).attr('title'))) {
-                    globalCatalog.set($(this).attr('title'), array)
 
+            await Promise.all( 
+                $('.group_list').find('.group_list_item')
+                .toArray()
+                .map(async elem => {
+                    const array = await getSubCatalogs($(elem).attr('href').trim());
 
-                    chapters.push(new Chapter($(this).attr('title'), link, false, $(this).attr('href')))
-                }
-            });
+                    console.log(`Каталог ${$(elem).attr('title')}`, array);
 
+                    if (!globalCatalog.has($(elem).attr('title'))) {
+                        globalCatalog.set($(elem).attr('title'), array);
+                    }
+
+                    chapters.push(new Chapter($(elem).attr('title'), link, false, $(elem).attr('href')));
+
+                    return;
+                })
+            );
 
             result.push(...chapters);
 
 
             for (let i = 0; i < chapters.length; i++) {
-                console.log('Полезли глубже...')
                 result.push(...await getCatalog(chapters[i].link));
             }
 
@@ -85,6 +91,7 @@ async function getCatalog(link) {
             });
         }
         console.log('Каталоги', globalCatalog.keys())
+        console.log('Результат', result)
         return result;
     } catch (e) {
         throw new Error(e);
@@ -120,7 +127,8 @@ async function getSubCatalogs(url) {
 async function start() {
     const catalog1 = await getCatalog('/catalog/');
     const a1 = await globalCatalog.keys();
-    console.log('КАТАЛОХ!', catalog1)
+    console.log(a1)
+    console.log(catalog1)
 }
 
 start()
