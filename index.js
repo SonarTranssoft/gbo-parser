@@ -41,6 +41,7 @@ async function getCatalog(link) {
                     globalCatalog.set($(this).attr('title'), [])
                 }
 
+
                 chapters.push(new Chapter($(this).attr('title'), link, false, $(this).attr('href')))
             });
 
@@ -66,32 +67,38 @@ async function getCatalog(link) {
     }
 }
 
-async function getSubCatalogs(url) {
-    try {
-        const {data} = await axios({
-            method: "GET",
-            url: BASE_URL + encodeURI(url),
-            httpsAgent: agent,
-            proxy: false
-        })
-
-        const $ = cheerio.load(data);
-
-
-
-    } catch (e) {
-        console.log(BASE_URL + encodeURI(url));
-        console.log(e)
-    }
-}
+// async function getSubCatalogs(url) {
+//     const arr = [];
+//
+//     try {
+//         const {data} = await axios({
+//             method: "GET",
+//             url: BASE_URL + encodeURI(url),
+//             httpsAgent: agent,
+//             proxy: false
+//         })
+//
+//         const $ = cheerio.load(data);
+//
+//         $('div.group_list_title_cell').each(function () {
+//             arr.push($(this).text())
+//         })
+//
+//         return arr;
+//
+//     } catch (e) {
+//         console.log(BASE_URL + encodeURI(url));
+//         console.log(e)
+//     }
+// }
 
 async function getProductDataItem(link) {
 
     const params = {};
-
+    let data = null;
     try {
 
-        const {data} = await axios({
+        data = await axios({
             method: "GET",
             url: BASE_URL + encodeURI(link),
             httpsAgent: agent,
@@ -100,26 +107,26 @@ async function getProductDataItem(link) {
 
         const $ = cheerio.load(data);
 
-        $('div.shop_full_item_right > div').each(function () {
-            if ($(this).find('.full_title').length) {
-                params[$($(this).contents().get(0)).text().trim()] = $($(this).contents().get(1)).text().trim();
-            }
-        });
-
-        return new Product({
-            imgSrc: $('img.shop_full_item_img').attr('src'),
-            title: params["Полное наименование:"] || '-',
-            vendorCode: params["Код товара:"] || "-",
-            cost: $('span.price_value').text(),
-            manufacturerCode: params["Артикул производителя:"] || "-",
-            description: $('div.shop_full_item_tabs').find('.box').first().text().trim(),
-            parent: $('div.catalog_group_h1').text()
-        });
-
     } catch (e) {
         console.log(BASE_URL + link)
         console.log(e);
     }
+
+    $('div.shop_full_item_right > div').each(function () {
+        if ($(this).find('.full_title').length) {
+            params[$($(this).contents().get(0)).text().trim()] = $($(this).contents().get(1)).text().trim();
+        }
+    });
+
+    return new Product({
+        imgSrc: $('img.shop_full_item_img').attr('src'),
+        title: params["Полное наименование:"] || '-',
+        vendorCode: params["Код товара:"] || "-",
+        cost: $('span.price_value').text(),
+        manufacturerCode: params["Артикул производителя:"] || "-",
+        description: $('div.shop_full_item_tabs').find('.box').first().text().trim(),
+        parent: $('div.catalog_group_h1').text()
+    });
 }
 
 async function downloadFileFromUrl(url) {
