@@ -54,17 +54,24 @@ async function getCatalog(link) {
 
 
          if ($('.group_list').length) {
-            await $('.group_list').find('.group_list_item').each(async function () {
-                let array = await getSubCatalogs($(this).attr('href').trim())
-                console.log(`Каталог ${$(this).attr('title')}`, array)
-                if (!globalCatalog.has($(this).attr('title'))) {
-                    globalCatalog.set($(this).attr('title'), array)
-                }
 
+            await Promise.all( 
+                $('.group_list').find('.group_list_item')
+                .toArray()
+                .map(async elem => {
+                    const array = await getSubCatalogs($(elem).attr('href').trim());
 
-                chapters.push(new Chapter($(this).attr('title'), link, false, $(this).attr('href')))
-            });
+                    console.log(`Каталог ${$(elem).attr('title')}`, array);
 
+                    if (!globalCatalog.has($(elem).attr('title'))) {
+                        globalCatalog.set($(elem).attr('title'), array);
+                    }
+
+                    chapters.push(new Chapter($(elem).attr('title'), link, false, $(elem).attr('href')));
+
+                    return;
+                })
+            );
 
             result.push(...chapters);
 
