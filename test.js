@@ -33,7 +33,7 @@ const BASE_URL = 'https://www.mirgaza.ru';
 //
 // let varName = downloadFileFromUrl('/upload/shop_1/2/6/4/item_26455/shop_items_catalog_image26455.jpg')
 
-async function getCatalog(link, level = 1) {
+async function getCatalog(link, level) {
 
     // результат уже как удобно сформируй
     const result = [];
@@ -77,7 +77,7 @@ async function getCatalog(link, level = 1) {
 
 
             for (let i = 0; i < chapters.length; i++) {
-                result.push(...await getCatalog(chapters[i].link, level++));
+                result.push(...await getCatalog(chapters[i].link, ++level));
             }
 
             console.log('Страница ' + link + ' просканирована');
