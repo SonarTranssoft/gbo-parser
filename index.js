@@ -16,19 +16,17 @@ const agent = tunnel.httpsOverHttp({
 const globalCatalog = new Map();
 const BASE_URL = 'https://www.mirgaza.ru';
 
-/** Сделать запрос, и вернуть результат калалога с id равным link */
-async function getCatalog(link) {
+/** Запрос к корневому каталогу. Возвращает массив каталогов */
+async function getCatalog(link, level) {
 
-    // результат уже как удобно сформируй
     const result = [];
     const chapters = [];
-
 
     try {
         console.log('Сканирую страницу...' + link);
         const {data} = await axios({
             method: 'GET',
-            url: BASE_URL + link,
+            url: BASE_URL + encodeURI(link),
             httpsAgent: agent,
             proxy: false
         });
@@ -36,19 +34,29 @@ async function getCatalog(link) {
         const $ = cheerio.load(data);
 
         if ($('.group_list').length) {
-            $('.group_list').find('.group_list_item').each(function () {
-                if (!globalCatalog.has($(this).attr('title'))) {
-                    globalCatalog.set($(this).attr('title'), [])
-                }
 
+            await Promise.all(
+                $('.group_list').find('.group_list_item')
+                    .toArray()
+                    .map(async elem => {
+                        const subdirectories = await getSubCatalogs($(elem).attr('href').trim());
 
-                chapters.push(new Chapter($(this).attr('title'), link, false, $(this).attr('href')))
-            });
+                        console.log(`Каталог ${$(elem).attr('title')}`, subdirectories);
+
+                        if (level === 1) {
+                            globalCatalog.set($(elem).attr('title'), subdirectories);
+                        }
+
+                        chapters.push(new Chapter($(elem).attr('title'), link, false, $(elem).attr('href')));
+
+                        return;
+                    })
+            );
 
             result.push(...chapters);
 
             for (let i = 0; i < chapters.length; i++) {
-                result.push(...await getCatalog(chapters[i].link));
+                result.push(...await getCatalog(chapters[i].link, ++level));
             }
 
             console.log('Страница ' + link + ' просканирована');
@@ -56,42 +64,43 @@ async function getCatalog(link) {
         } else if ($('.shop_block').length) {
             console.log(link + ' Дошли до товаров в этой категории');
             $('.shop_table').find('div.description_sell').each(function () {
+                console.log(`Залезли в каталог с товарами ${$(this).text().trim()}`)
                 result.push(new Chapter($(this).text().trim(), link, true, $(this).find('a').attr('href')))
             });
         }
-
         return result;
-
     } catch (e) {
         throw new Error(e);
     }
 }
 
-// async function getSubCatalogs(url) {
-//     const arr = [];
-//
-//     try {
-//         const {data} = await axios({
-//             method: "GET",
-//             url: BASE_URL + encodeURI(url),
-//             httpsAgent: agent,
-//             proxy: false
-//         })
-//
-//         const $ = cheerio.load(data);
-//
-//         $('div.group_list_title_cell').each(function () {
-//             arr.push($(this).text())
-//         })
-//
-//         return arr;
-//
-//     } catch (e) {
-//         console.log(BASE_URL + encodeURI(url));
-//         console.log(e)
-//     }
-// }
+/** Получает массив подкаталогов */
+async function getSubCatalogs(url) {
+    const arrayOfSubdirectories = [];
 
+    try {
+        const {data} = await axios({
+            method: "GET",
+            url: BASE_URL + encodeURI(url),
+            httpsAgent: agent,
+            proxy: false
+        })
+
+        const $ = cheerio.load(data);
+
+        $('div.group_list_title_cell').each(function () {
+            arrayOfSubdirectories.push($(this).text())
+        })
+
+        return arrayOfSubdirectories;
+
+    } catch (e) {
+        console.log(BASE_URL + encodeURI(url));
+        console.log(e)
+    }
+}
+
+/** Получаем данные по конкретному товару */
 async function getProductDataItem(link) {
 
     const params = {};
@@ -120,7 +129,7 @@ async function getProductDataItem(link) {
 
     return new Product({
         imgSrc: $('img.shop_full_item_img').attr('src'),
-        title: params["Полное наименование:"] || '-',
+        title: $('h1.catalog_group_h1').text() || '-',
         vendorCode: params["Код товара:"] || "-",
         cost: $('span.price_value').text(),
         manufacturerCode: params["Артикул производителя:"] || "-",
@@ -129,6 +138,7 @@ async function getProductDataItem(link) {
     });
 }
 
+/** Загрузка изображения для конкретного товара */
 async function downloadFileFromUrl(url) {
     const {data} = await axios.get(BASE_URL + url, {
         responseType: "arraybuffer"
@@ -137,7 +147,8 @@ async function downloadFileFromUrl(url) {
     const buffer = Buffer.from(data, 'binary');
     const image = url.split('/').pop();
 
-    await sharp(buffer).toFile(__dirname + '/images/' + image);
+    await sharp(buffer)
+        .toFile(__dirname + '/images/' + image);
 
     return image;
 }
@@ -147,8 +158,8 @@ async function init() {
     const arrayOfProductsData = [];
 
     try {
-        const catalog1 = await getCatalog('/catalog/');
-        const products = catalog1.filter(e => e.isProduct);
+        const catalog = await getCatalog('/catalog/');
+        const products = catalog.filter(e => e.isProduct);
 
         console.log('Список каталогов с товарами получен. Начинаю получение данных по каждому товару');
 
@@ -165,8 +176,6 @@ async function init() {
         console.log(arrayOfProductsData.length);
         console.log('Начинаю загрузку изображений');
 
-        // //Хочу обойти массив полученных данных, чтобы загрузить на диск изображения, которые потом будут записываться в *.xls файл.
-        // // Пока не предусмотрел обрезание до нужного количества пикселей
         for (let i = 0; i < arrayOfProductsData.length; i++) {
             try {
                 let imageFileName = await downloadFileFromUrl(arrayOfProductsData[i].imgSrc);
@@ -175,10 +184,11 @@ async function init() {
                 console.log(e)
             }
         }
+
+
     } catch (e) {
         throw new Error(e)
     }
 }
-
 
 init();
