@@ -19,8 +19,10 @@ const BASE_URL = 'https://www.mirgaza.ru';
 /** Запрос к корневому каталогу. Возвращает массив каталогов */
 async function getCatalog(link, level) {
 
+    // результат уже как удобно сформируй
     const result = [];
     const chapters = [];
+
 
     try {
         console.log('Сканирую страницу...' + link);
@@ -33,18 +35,19 @@ async function getCatalog(link, level) {
 
         const $ = cheerio.load(data);
 
+
         if ($('.group_list').length) {
 
             await Promise.all(
                 $('.group_list').find('.group_list_item')
                     .toArray()
                     .map(async elem => {
-                        const subdirectories = await getSubCatalogs($(elem).attr('href').trim());
+                        const array = await getSubdirectories($(elem).attr('href').trim());
 
-                        console.log(`Каталог ${$(elem).attr('title')}`, subdirectories);
+                        console.log(`Каталог ${$(elem).attr('title')}`, array);
 
                         if (level === 1) {
-                            globalCatalog.set($(elem).attr('title'), subdirectories);
+                            globalCatalog.set($(elem).attr('title'), array);
                         }
 
                         chapters.push(new Chapter($(elem).attr('title'), link, false, $(elem).attr('href')));
@@ -54,6 +57,7 @@ async function getCatalog(link, level) {
             );
 
             result.push(...chapters);
+
 
             for (let i = 0; i < chapters.length; i++) {
                 result.push(...await getCatalog(chapters[i].link, ++level));
@@ -68,14 +72,16 @@ async function getCatalog(link, level) {
                 result.push(new Chapter($(this).text().trim(), link, true, $(this).find('a').attr('href')))
             });
         }
+
         return result;
     } catch (e) {
         throw new Error(e);
     }
 }
 
+
 /** Получает массив подкаталогов */
-async function getSubCatalogs(url) {
+async function getSubdirectories(url) {
     const arrayOfSubdirectories = [];
 
     try {
@@ -104,18 +110,17 @@ async function getSubCatalogs(url) {
 async function getProductDataItem(link) {
 
     const params = {};
-    let data = null;
+    let $;
     try {
 
-        data = await axios({
+        const {data} = await axios({
             method: "GET",
             url: BASE_URL + encodeURI(link),
             httpsAgent: agent,
             proxy: false
         });
 
-        const $ = cheerio.load(data);
-
+        $ = cheerio.load(data);
     } catch (e) {
         console.log(BASE_URL + link)
         console.log(e);
@@ -134,7 +139,7 @@ async function getProductDataItem(link) {
         cost: $('span.price_value').text(),
         manufacturerCode: params["Артикул производителя:"] || "-",
         description: $('div.shop_full_item_tabs').find('.box').first().text().trim(),
-        parent: $('div.catalog_group_h1').text()
+        parent: $('[itemscope="itemscope"]').last().prev().prev().text().trim()
     });
 }
 
@@ -158,7 +163,7 @@ async function init() {
     const arrayOfProductsData = [];
 
     try {
-        const catalog = await getCatalog('/catalog/');
+        const catalog = await getCatalog('/catalog/', 1);
         const products = catalog.filter(e => e.isProduct);
 
         console.log('Список каталогов с товарами получен. Начинаю получение данных по каждому товару');
@@ -166,26 +171,28 @@ async function init() {
         for (let i = 0; i < products.length; i++) {
             try {
                 let a = await getProductDataItem(products[i].link);
+                console.log(a);
                 arrayOfProductsData.push(a);
             } catch (e) {
                 console.log(e)
             }
         }
 
-        console.log(arrayOfProductsData);
         console.log(arrayOfProductsData.length);
         console.log('Начинаю загрузку изображений');
 
-        for (let i = 0; i < arrayOfProductsData.length; i++) {
-            try {
-                let imageFileName = await downloadFileFromUrl(arrayOfProductsData[i].imgSrc);
-                console.log(`Файл ${imageFileName} загружен. Осталось загрузить примерно ${arrayOfProductsData.length - i} файлов`);
-            } catch (e) {
-                console.log(e)
-            }
+        for (let key of globalCatalog.keys()) {
+            console.log(`Для ключа ${key} существует список подкаталогов ${globalCatalog.get(key)}`)
         }
 
-
+        // for (let i = 0; i < arrayOfProductsData.length; i++) {
+        //     try {
+        //         let imageFileName = await downloadFileFromUrl(arrayOfProductsData[i].imgSrc);
+        //         console.log(`Файл ${imageFileName} загружен. Осталось загрузить примерно ${arrayOfProductsData.length - i} файлов`);
+        //     } catch (e) {
+        //         console.log(e)
+        //     }
+        // }
     } catch (e) {
         throw new Error(e)
     }
