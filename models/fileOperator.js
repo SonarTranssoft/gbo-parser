@@ -73,7 +73,7 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
 
 exports.validateLength = async function validateLength(str) {
     if (str.length > 31) {
-        return str.split(' ').map(el => {return el.substring(0, 3).concat('. ')}).join('');
+        return str.split(' ').map(el =>  el.substring(0, 3).concat('. ')).join('');
     } else {
         return str;
     }
