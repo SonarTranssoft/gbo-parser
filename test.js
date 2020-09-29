@@ -260,8 +260,20 @@ async function createXLSXFiles() {
             })
             worksheet1.columns = props;
             let row = worksheet1.getRow(1).height = 15;
-            const productsForSheet = products.filter(value => value.parent === value)
-            worksheet1.addRows(productsForSheet);
+            const productsForSheet = products.filter(val => val.parent === catalog)
+            for (let i = 0; i < productsForSheet.length; i++) {
+                let imageToPaste = workbook.addImage({
+                    filename: `${__dirname}/images/${productsForSheet[i].imgSrc.split('/').pop()}`,
+                    extension: "jpeg"
+                });
+                worksheet1.addImage(imageToPaste, {
+                    tl: {col: 0, row: 0.1 + i},
+                    ext: {width: 500, height: 500},
+                    editAs: 'absolute'
+                });
+                worksheet1.addRow(productsForSheet[i]);
+            }
+
         } else {
             arrayOfSheets.forEach(el => {
                 let worksheet = workbook.addWorksheet(el, {
@@ -273,11 +285,19 @@ async function createXLSXFiles() {
                 let row = worksheet.getRow(1).height = 15;
 
                 const productsForSheet = products.filter(val => val.parent === el)
-                // .forEach(product => {
-                //     let imageFromArray = product.imgSrc.split('/').pop();
-                //
-                // })
-                worksheet.addRows(productsForSheet);
+                for (let i = 0; i < productsForSheet.length; i++) {
+                    let imageToPaste = workbook.addImage({
+                        filename: `${__dirname}/images/${productsForSheet[i].imgSrc.split('/').pop()}`,
+                        extension: "jpeg"
+                    });
+                    worksheet.addImage(imageToPaste, {
+                        tl: {col: 0, row: 1.1 + i},
+                        ext: {width: 500, height: 500},
+                        editAs: 'absolute'
+                    });
+                    worksheet.addRow(productsForSheet[i]);
+                }
+
             })
         }
         await workbook
