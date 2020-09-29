@@ -1,3 +1,5 @@
+const Excel = require('exceljs');
+
 class FileOperator {
     constructor() {
     }
