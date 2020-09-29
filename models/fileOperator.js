@@ -15,25 +15,25 @@ exports.createXLSXFiles = async function (map, data) {
         let arrayOfSheets = map.get(catalog);
 
         if (arrayOfSheets.length === 0) {
-            let worksheet1 = workbook.addWorksheet(catalog, {
+            let worksheet = workbook.addWorksheet(catalog, {
                 properties: {
                     defaultRowHeight: 500,
                 }
             })
-            worksheet1.columns = props;
-            let row = worksheet1.getRow(1).height = 15;
+            worksheet.columns = props;
+            let row = worksheet.getRow(1).height = 15;
             const productsForSheet = data.filter(val => val.parent === catalog)
             for (let i = 0; i < productsForSheet.length; i++) {
                 let imageToPaste = workbook.addImage({
-                    filename: `${__dirname}/images/${productsForSheet[i].imgSrc.split('/').pop()}`,
+                    filename: `./images/${productsForSheet[i].imgSrc.split('/').pop()}`,
                     extension: "jpeg"
                 });
-                worksheet1.addImage(imageToPaste, {
+                worksheet.addImage(imageToPaste, {
                     tl: {col: 0, row: 1.1 + i},
                     ext: {width: 500, height: 500},
                     editAs: 'absolute'
                 });
-                worksheet1.addRow(productsForSheet[i], {
+                worksheet.addRow(productsForSheet[i], {
                     properties: {
                         defaultRowHeight: 500
                     }
@@ -53,7 +53,7 @@ exports.createXLSXFiles = async function (map, data) {
                 const productsForSheet = data.filter(val => val.parent === el)
                 for (let i = 0; i < productsForSheet.length; i++) {
                     let imageToPaste = workbook.addImage({
-                        filename: `${__dirname}/images/${productsForSheet[i].imgSrc.split('/').pop()}`,
+                        filename: `./images/${productsForSheet[i].imgSrc.split('/').pop()}`,
                         extension: "jpeg"
                     });
                     worksheet.addImage(imageToPaste, {
@@ -73,5 +73,3 @@ exports.createXLSXFiles = async function (map, data) {
             .catch(err => console.log(err))
     }
 }
-
-module.exports = FileOperator;

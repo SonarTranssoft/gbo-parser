@@ -161,7 +161,7 @@ async function downloadFileFromUrl(url) {
 
 async function init() {
 
-    const arrayOfProductsData = [];
+    const productsData = [];
 
     try {
         const catalog = await getCatalog('/catalog/', 1);
@@ -173,22 +173,22 @@ async function init() {
             try {
                 let a = await getProductDataItem(products[i].link);
                 console.log(a);
-                arrayOfProductsData.push(a);
+                productsData.push(a);
             } catch (e) {
                 console.log(e)
             }
         }
 
-        for (let i = 0; i < arrayOfProductsData.length; i++) {
+        for (let i = 0; i < productsData.length; i++) {
             try {
-                let imageFileName = await downloadFileFromUrl(arrayOfProductsData[i].imgSrc);
-                console.log(`Файл ${imageFileName} загружен. Осталось загрузить примерно ${arrayOfProductsData.length - i} файлов`);
+                let imageFileName = await downloadFileFromUrl(productsData[i].imgSrc);
+                console.log(`Файл ${imageFileName} загружен. Осталось загрузить примерно ${productsData.length - i} файлов`);
             } catch (e) {
                 console.log(e)
             }
         }
 
-        await createXLSXFiles(globalCatalog, arrayOfProductsData);
+        await createXLSXFiles(globalCatalog, productsData);
 
     } catch (e) {
         throw new Error(e)

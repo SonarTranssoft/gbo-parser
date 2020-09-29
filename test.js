@@ -6,6 +6,7 @@ const Excel = require('exceljs');
 const Chapter = require('./models/chapter');
 const tunnel = require('tunnel');
 const Product = require('./models/productFull');
+const {createXLSXFiles} = require('./models/fileOperator');
 const agent = tunnel.httpsOverHttp({
     proxy: {
         host: '193.31.103.37',
@@ -241,7 +242,7 @@ map.set('Ремкомплекты', [])
 
 
 async function init() {
-
+await createXLSXFiles(map, products);
 }
 
 init();
