@@ -242,7 +242,7 @@ map.set('Ремкомплекты', [])
 
 
 async function init() {
-await createXLSXFiles(map, products);
+await createXLSXFiles(map, products)
 }
 
 init();

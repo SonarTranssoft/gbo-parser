@@ -12,11 +12,11 @@ class ProductFull {
 
         this.imgSrc = options.imgSrc;
         this.title = options.title;
-        this.parent = options.parent || null;
+        this.parent = options.parent || 'no-parent';
         this.vendorCode = options.vendorCode || 0;
         this.cost = options.cost || 0;
         this.manufacturerCode = options.manufacturerCode || 0;
-        this.description = options.description || '-';
+        this.description = options.description || 0;
     }
 }
 
