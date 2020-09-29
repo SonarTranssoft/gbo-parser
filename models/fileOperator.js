@@ -1,12 +1,6 @@
 const Excel = require('exceljs');
 
-class FileOperator {
-    constructor() {
-    }
-}
-
-
-FileOperator.prototype.createXLSXFiles = async function createXLSXFiles(data) {
+exports.createXLSXFiles = async function (map, data) {
     let props = [
         {header: 'Изображение', key: 'img', width: 100},
         {header: 'Полное название', key: 'title', width: 30},

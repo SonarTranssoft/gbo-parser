@@ -5,6 +5,7 @@ const Excel = require('exceljs');
 const Chapter = require('./models/chapter');
 const Product = require('./models/productFull');
 const tunnel = require('tunnel');
+const createXLSXFiles = require('./models/fileOperator');
 const agent = tunnel.httpsOverHttp({
     proxy: {
         host: '193.31.103.37',
@@ -178,21 +179,17 @@ async function init() {
             }
         }
 
-        console.log(arrayOfProductsData.length);
-        console.log('Начинаю загрузку изображений');
-
-        for (let key of globalCatalog.keys()) {
-            console.log(`Для ключа ${key} существует список подкаталогов ${globalCatalog.get(key)}`)
+        for (let i = 0; i < arrayOfProductsData.length; i++) {
+            try {
+                let imageFileName = await downloadFileFromUrl(arrayOfProductsData[i].imgSrc);
+                console.log(`Файл ${imageFileName} загружен. Осталось загрузить примерно ${arrayOfProductsData.length - i} файлов`);
+            } catch (e) {
+                console.log(e)
+            }
         }
 
-        // for (let i = 0; i < arrayOfProductsData.length; i++) {
-        //     try {
-        //         let imageFileName = await downloadFileFromUrl(arrayOfProductsData[i].imgSrc);
-        //         console.log(`Файл ${imageFileName} загружен. Осталось загрузить примерно ${arrayOfProductsData.length - i} файлов`);
-        //     } catch (e) {
-        //         console.log(e)
-        //     }
-        // }
+        await createXLSXFiles(globalCatalog, arrayOfProductsData);
+
     } catch (e) {
         throw new Error(e)
     }
