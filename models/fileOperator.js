@@ -2,8 +2,13 @@ const Excel = require('exceljs');
 const fs = require('fs');
 
 function checkFileAvailability(str) {
-    if (!str || !fs.existsSync(str)) return './images/no_image.jpg';
-    return './images/' + str;
+    if (!str || !fs.existsSync('./images/' + str.split('/').pop())) {
+        return './images/no_image.jpg';
+    } else if (fs.statSync(`./images/${str.split('/').pop()}`).isFile()) {
+        return './images/' + str.split('/').pop();
+    } else {
+        return './images/no_image.jpg';
+    }
 }
 
 
@@ -17,28 +22,28 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
         {header: 'Цена', key: 'cost', width: 15},
         {header: 'Код производителя', key: 'manufacturerCode', width: 20},
         {header: 'Полное описание', key: 'description', width: 300}
-    ]
+    ];
     for (let catalog of map.keys()) {
-        console.log(catalog)
+        console.log(catalog);
         const workbook = new Excel.Workbook();
         let arrayOfSheets = map.get(catalog);
-        console.log('Массив листов', arrayOfSheets)
+        console.log('Массив листов', arrayOfSheets);
 
         if (!arrayOfSheets.length) {
             let worksheet = workbook.addWorksheet(transformString(catalog), {
                 properties: {
                     defaultRowHeight: 500,
                 }
-            })
+            });
             worksheet.columns = props;
             worksheet.getRow(1).height = 15;
-            const productsForSheet = data.filter(val => val.parent === catalog)
+            const productsForSheet = data.filter(val => val.parent === catalog);
             for (let i = 0; i < productsForSheet.length; i++) {
 
                 console.log('Ссылка к файлу картинки', productsForSheet[i].imgSrc);
 
-                path = checkFileAvailability(productsForSheet[i].imgSrc).split('/').pop();
-                console.log('Путь к картинке', path)
+                path = checkFileAvailability(productsForSheet[i].imgSrc);
+                console.log('Путь к картинке', path);
                 let imageToPaste = workbook.addImage({
                     filename: path,
                     extension: "jpeg"
@@ -58,15 +63,15 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
                     properties: {
                         defaultRowHeight: 500,
                     }
-                })
+                });
                 worksheet.columns = props;
                 worksheet.getRow(1).height = 15;
 
-                const productsForSheet = data.filter(val => val.parent === el)
+                const productsForSheet = data.filter(val => val.parent === el);
                 for (let i = 0; i < productsForSheet.length; i++) {
                     console.log('Ссылка к файлу картинки', productsForSheet[i].imgSrc);
-                    path = checkFileAvailability(productsForSheet[i].imgSrc).split('/').pop();
-                    console.log('Путь к картинке', path)
+                    path = checkFileAvailability(productsForSheet[i].imgSrc);
+                    console.log('Путь к картинке', path);
                     let imageToPaste = workbook.addImage({
                         filename: path,
                         extension: "jpeg"

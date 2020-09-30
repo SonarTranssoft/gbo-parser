@@ -199,7 +199,6 @@ async function init() {
             console.log('Ошибка при записи файла', e);
         }
 
-
     } catch (e) {
         throw new Error(e)
     }
