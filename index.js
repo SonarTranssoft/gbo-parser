@@ -179,14 +179,14 @@ async function init() {
             }
         }
 
-        // for (let i = 0; i < productsData.length; i++) {
-        //     try {
-        //         let imageFileName = await downloadFileFromUrl(productsData[i].imgSrc);
-        //         console.log(`Файл ${imageFileName} загружен. Осталось загрузить примерно ${productsData.length - i} файлов`);
-        //     } catch (e) {
-        //         console.log(e)
-        //     }
-        // }
+        for (let i = 0; i < productsData.length; i++) {
+            try {
+                let imageFileName = await downloadFileFromUrl(productsData[i].imgSrc);
+                console.log(`Файл ${imageFileName} загружен. Осталось загрузить примерно ${productsData.length - i} файлов`);
+            } catch (e) {
+                console.log(e)
+            }
+        }
         await globalCatalog.set('no-parent', []);
         await createXLSXFiles.createXLSXFiles(globalCatalog, productsData);
 

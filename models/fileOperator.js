@@ -1,4 +1,14 @@
 const Excel = require('exceljs');
+const fs = require('fs');
+
+function checkFileAvailability(str) {
+    if (fs.existsSync(str)) {
+        return str;
+    } else {
+        return './images/no_image.jpg'
+    }
+}
+
 
 exports.createXLSXFiles = async function createXLSXFiles(map, data) {
     let props = [
@@ -15,7 +25,7 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
         let arrayOfSheets = map.get(catalog);
 
         if (!arrayOfSheets.length) {
-            let worksheet = workbook.addWorksheet(catalog, {
+            let worksheet = workbook.addWorksheet(transformString(catalog), {
                 properties: {
                     defaultRowHeight: 500,
                 }
@@ -24,8 +34,9 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
             worksheet.getRow(1).height = 15;
             const productsForSheet = data.filter(val => val.parent === catalog)
             for (let i = 0; i < productsForSheet.length; i++) {
+                let path = checkFileAvailability(`./images/${productsForSheet[i].imgSrc.split('/').pop()}`);
                 let imageToPaste = workbook.addImage({
-                    filename: `./images/${productsForSheet[i].imgSrc.split('/').pop()}`,
+                    filename: path,
                     extension: "jpeg"
                 });
                 worksheet.addImage(imageToPaste, {
@@ -38,7 +49,7 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
 
         } else {
             arrayOfSheets.forEach(el => {
-                let worksheet = workbook.addWorksheet(el, {
+                let worksheet = workbook.addWorksheet(transformString(el), {
                     properties: {
                         defaultRowHeight: 500,
                     }
@@ -48,8 +59,9 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
 
                 const productsForSheet = data.filter(val => val.parent === el)
                 for (let i = 0; i < productsForSheet.length; i++) {
+                    const path = checkFileAvailability(`./images/${productsForSheet[i].imgSrc.split('/').pop()}`);
                     let imageToPaste = workbook.addImage({
-                        filename: `./images/${productsForSheet[i].imgSrc.split('/').pop()}`,
+                        filename: path,
                         extension: "jpeg"
                     });
                     worksheet.addImage(imageToPaste, {
@@ -59,7 +71,6 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
                     });
                     worksheet.addRow(productsForSheet[i]);
                 }
-
             })
         }
 
@@ -71,9 +82,10 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
     }
 }
 
-exports.validateLength = async function validateLength(str) {
+function transformString(str) {
     if (str.length > 31) {
-        return str.split(' ').map(el =>  el.substring(0, 3).concat('. ')).join('');
+        return str.split(' ').map(el => el.substring(0, 3) + '. ')
+            .join('');
     } else {
         return str;
     }
