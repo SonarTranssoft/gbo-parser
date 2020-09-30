@@ -173,6 +173,42 @@ const BASE_URL = 'https://www.mirgaza.ru';
 //     console.log("err", err);
 //   });
 
+async function getProductDataItem(link) {
+
+    const params = {};
+    let $;
+    try {
+
+        const {data} = await axios({
+            method: "GET",
+            url: BASE_URL + encodeURI(link),
+            httpsAgent: agent,
+            proxy: false
+        });
+
+        $ = cheerio.load(data);
+    } catch (e) {
+        console.log(BASE_URL + link)
+        console.log(e);
+    }
+
+    $('div.shop_full_item_right > div').each(function () {
+        if ($(this).find('.full_title').length) {
+            params[$($(this).contents().get(0)).text().trim()] = $($(this).contents().get(1)).text().trim();
+        }
+    });
+
+    return new Product({
+        imgSrc: $('img.shop_full_item_img').attr('src'),
+        title: $('h1.catalog_group_h1').text() || '-',
+        vendorCode: params["Код товара:"] || "-",
+        cost: $('span.price_value').text(),
+        manufacturerCode: params["Артикул производителя:"] || "-",
+        description: $('div.shop_full_item_tabs').find('.box').first().text().trim(),
+        parent: $('[itemscope="itemscope"]').last().prev().prev().text().trim()
+    });
+}
+
 
 const map = new Map();
 let products = [
@@ -232,13 +268,23 @@ let products = [
             'BRC ME до 100 kW или до 137 лошадиных сил;\n' +
             'BRC ME SUPER с мощностью до 140 киловатт (до 192 лошадиных сил;\n' +
             'BRC ME MAXI FLOW. Он имеет мощность свыше 140 kW или свыше 192 лошадиных сил.'
-    })
+    }),
+    new Product({
+            imgSrc: '/Images/no_image.jpg',
+            title: 'Впрыск BRC для Cadillac Escalade',
+            parent: 'Комплекты ГБО Непосредственный впрыск',
+            vendorCode: '15490',
+            cost: '78 330 р',
+            manufacturerCode: '09SQ4SDI0038/ 09SQ9902005',
+            description: 0
+        }
+    )
 ]
 
 map.set('Метановое оборудование', ['Комплекты ГБО Метан', 'Баллоны метан', 'Крепления баллонов', 'Труба стальная', 'ВЗУ - Метан', 'Вентили', 'Клапаны', 'Редукторы', 'Ремкомплекты', 'Манометры', 'Фильтры', 'Монтаж']);
 map.set('Мультиклапаны Венткамеры, ВЗУ', ['Мультиклапаны', 'ВЗУ, Венткамеры']);
 map.set('Ремкомплекты', [])
-
+map.set('Комплекты ГБО Непосредственный впрыск', []);
 
 
 async function init() {

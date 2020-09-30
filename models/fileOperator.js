@@ -1,6 +1,14 @@
 const Excel = require('exceljs');
+const fs = require('fs');
+
+function checkFileAvailability(str) {
+    if (!str || !fs.existsSync(str)) return './images/no_image.jpg';
+    return './images/' + str;
+}
+
 
 exports.createXLSXFiles = async function createXLSXFiles(map, data) {
+    let path;
     let props = [
         {header: 'Изображение', key: 'img', width: 100},
         {header: 'Полное название', key: 'title', width: 30},
@@ -11,11 +19,13 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
         {header: 'Полное описание', key: 'description', width: 300}
     ]
     for (let catalog of map.keys()) {
+        console.log(catalog)
         const workbook = new Excel.Workbook();
         let arrayOfSheets = map.get(catalog);
+        console.log('Массив листов', arrayOfSheets)
 
         if (!arrayOfSheets.length) {
-            let worksheet = workbook.addWorksheet(catalog, {
+            let worksheet = workbook.addWorksheet(transformString(catalog), {
                 properties: {
                     defaultRowHeight: 500,
                 }
@@ -24,8 +34,13 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
             worksheet.getRow(1).height = 15;
             const productsForSheet = data.filter(val => val.parent === catalog)
             for (let i = 0; i < productsForSheet.length; i++) {
+
+                console.log('Ссылка к файлу картинки', productsForSheet[i].imgSrc);
+
+                path = checkFileAvailability(productsForSheet[i].imgSrc).split('/').pop();
+                console.log('Путь к картинке', path)
                 let imageToPaste = workbook.addImage({
-                    filename: `./images/${productsForSheet[i].imgSrc.split('/').pop()}`,
+                    filename: path,
                     extension: "jpeg"
                 });
                 worksheet.addImage(imageToPaste, {
@@ -38,7 +53,8 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
 
         } else {
             arrayOfSheets.forEach(el => {
-                let worksheet = workbook.addWorksheet(el, {
+                console.log(el);
+                let worksheet = workbook.addWorksheet(transformString(el), {
                     properties: {
                         defaultRowHeight: 500,
                     }
@@ -48,8 +64,11 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
 
                 const productsForSheet = data.filter(val => val.parent === el)
                 for (let i = 0; i < productsForSheet.length; i++) {
+                    console.log('Ссылка к файлу картинки', productsForSheet[i].imgSrc);
+                    path = checkFileAvailability(productsForSheet[i].imgSrc).split('/').pop();
+                    console.log('Путь к картинке', path)
                     let imageToPaste = workbook.addImage({
-                        filename: `./images/${productsForSheet[i].imgSrc.split('/').pop()}`,
+                        filename: path,
                         extension: "jpeg"
                     });
                     worksheet.addImage(imageToPaste, {
@@ -59,21 +78,20 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
                     });
                     worksheet.addRow(productsForSheet[i]);
                 }
-
             })
         }
-
         await workbook
             .xlsx
-            .writeFile(`${catalog}.xlsx`)
+            .writeFile(`./${catalog}.xlsx`)
             .then(() => console.log('Saved'))
-            .catch(err => console.log(err))
+            .catch(err => console.log(err, catalog + 'При записи этого файла произошла ошибка'))
     }
 };
 
-exports.validateLength = async function validateLength(str) {
+function transformString(str) {
     if (str.length > 31) {
-        return str.split(' ').map(el =>  el.substring(0, 3).concat('. ')).join('');
+        return str.split(' ').map(el => el.substring(0, 3) + '. ')
+            .join('');
     } else {
         return str;
     }
