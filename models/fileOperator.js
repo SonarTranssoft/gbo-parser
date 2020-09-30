@@ -69,7 +69,7 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
             .then(() => console.log('Saved'))
             .catch(err => console.log(err))
     }
-}
+};
 
 exports.validateLength = async function validateLength(str) {
     if (str.length > 31) {
@@ -77,4 +77,4 @@ exports.validateLength = async function validateLength(str) {
     } else {
         return str;
     }
-}
+};
