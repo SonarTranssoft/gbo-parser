@@ -21,8 +21,10 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
         {header: 'Полное описание', key: 'description', width: 300}
     ]
     for (let catalog of map.keys()) {
+        console.log(catalog)
         const workbook = new Excel.Workbook();
         let arrayOfSheets = map.get(catalog);
+        console.log('Массив листов', arrayOfSheets)
 
         if (!arrayOfSheets.length) {
             let worksheet = workbook.addWorksheet(transformString(catalog), {
@@ -34,7 +36,9 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
             worksheet.getRow(1).height = 15;
             const productsForSheet = data.filter(val => val.parent === catalog)
             for (let i = 0; i < productsForSheet.length; i++) {
+
                 let path = checkFileAvailability(`./images/${productsForSheet[i].imgSrc.split('/').pop()}`);
+                console.log('Путь к картинке', path)
                 let imageToPaste = workbook.addImage({
                     filename: path,
                     extension: "jpeg"
@@ -49,6 +53,7 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
 
         } else {
             arrayOfSheets.forEach(el => {
+                console.log(el);
                 let worksheet = workbook.addWorksheet(transformString(el), {
                     properties: {
                         defaultRowHeight: 500,
@@ -60,6 +65,7 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
                 const productsForSheet = data.filter(val => val.parent === el)
                 for (let i = 0; i < productsForSheet.length; i++) {
                     const path = checkFileAvailability(`./images/${productsForSheet[i].imgSrc.split('/').pop()}`);
+                    console.log('Путь к картинке', path)
                     let imageToPaste = workbook.addImage({
                         filename: path,
                         extension: "jpeg"
@@ -73,12 +79,11 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
                 }
             })
         }
-
         await workbook
             .xlsx
-            .writeFile(`${catalog}.xlsx`)
+            .writeFile(`./${catalog}.xlsx`)
             .then(() => console.log('Saved'))
-            .catch(err => console.log(err))
+            .catch(err => console.log(err, catalog + 'При записи этого файла произошла ошибка'))
     }
 }
 

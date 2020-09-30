@@ -140,7 +140,7 @@ async function getProductDataItem(link) {
         cost: $('span.price_value').text(),
         manufacturerCode: params["Артикул производителя:"] || "-",
         description: $('div.shop_full_item_tabs').find('.box').first().text().trim(),
-        parent: $('[itemscope="itemscope"]').last().prev().prev().text().trim()
+        parent: $('[itemscope="itemscope"]').last().prev().prev().text().trim() || 'noparent'
     });
 }
 
@@ -179,16 +179,26 @@ async function init() {
             }
         }
 
-        for (let i = 0; i < productsData.length; i++) {
-            try {
-                let imageFileName = await downloadFileFromUrl(productsData[i].imgSrc);
-                console.log(`Файл ${imageFileName} загружен. Осталось загрузить примерно ${productsData.length - i} файлов`);
-            } catch (e) {
-                console.log(e)
-            }
+        // for (let i = 0; i < productsData.length; i++) {
+        //     try {
+        //         let imageFileName = await downloadFileFromUrl(productsData[i].imgSrc);
+        //         console.log(`Файл ${imageFileName} загружен. Осталось загрузить примерно ${productsData.length - i} файлов`);
+        //     } catch (e) {
+        //         console.log(e)
+        //     }
+        // }
+
+        try {
+            await globalCatalog.set('noparent', []);
+        } catch (e) {
+            console.log('Ошибка при задании пустого каталога', e)
         }
-        await globalCatalog.set('no-parent', []);
-        await createXLSXFiles.createXLSXFiles(globalCatalog, productsData);
+        try {
+            await createXLSXFiles.createXLSXFiles(globalCatalog, productsData);
+        } catch (e) {
+            console.log('Ошибка при записи файла', e);
+        }
+
 
     } catch (e) {
         throw new Error(e)
