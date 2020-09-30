@@ -2,15 +2,13 @@ const Excel = require('exceljs');
 const fs = require('fs');
 
 function checkFileAvailability(str) {
-    if (fs.existsSync(str)) {
-        return str;
-    } else {
-        return './images/no_image.jpg'
-    }
+    if (!str || !fs.existsSync(str)) return './images/no_image.jpg';
+    return './images/' + str;
 }
 
 
 exports.createXLSXFiles = async function createXLSXFiles(map, data) {
+    let path;
     let props = [
         {header: 'Изображение', key: 'img', width: 100},
         {header: 'Полное название', key: 'title', width: 30},
@@ -37,7 +35,9 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
             const productsForSheet = data.filter(val => val.parent === catalog)
             for (let i = 0; i < productsForSheet.length; i++) {
 
-                let path = checkFileAvailability(`./images/${productsForSheet[i].imgSrc.split('/').pop()}`);
+                console.log('Ссылка к файлу картинки', productsForSheet[i].imgSrc);
+
+                path = checkFileAvailability(productsForSheet[i].imgSrc).split('/').pop();
                 console.log('Путь к картинке', path)
                 let imageToPaste = workbook.addImage({
                     filename: path,
@@ -64,7 +64,8 @@ exports.createXLSXFiles = async function createXLSXFiles(map, data) {
 
                 const productsForSheet = data.filter(val => val.parent === el)
                 for (let i = 0; i < productsForSheet.length; i++) {
-                    const path = checkFileAvailability(`./images/${productsForSheet[i].imgSrc.split('/').pop()}`);
+                    console.log('Ссылка к файлу картинки', productsForSheet[i].imgSrc);
+                    path = checkFileAvailability(productsForSheet[i].imgSrc).split('/').pop();
                     console.log('Путь к картинке', path)
                     let imageToPaste = workbook.addImage({
                         filename: path,
