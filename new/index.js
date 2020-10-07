@@ -1,10 +1,15 @@
 const Parser = require('./parser');
+const parser = new Parser();
+
 const ImagesManager = require('./images-manager');
+const imagesManager = new ImagesManager();
+
+const ExcelManager = require('./excel');
+const excelManager = new ExcelManager();
+
 const cliProgress = require('cli-progress');
 const _colors = require('colors');
-
-const imagesManager = new ImagesManager();
-const parser = new Parser();
+const fs = require('fs');
 
 async function init() {
 
@@ -36,6 +41,56 @@ async function init() {
   parseBar.stop();
 
   console.log(_colors.green('Images created!'));
+
+  // превратим каталог в массив, для убоной работы
+  const catalogArray = [];
+
+  for (let code in catalog) {
+    catalogArray.push(catalog[code]);
+  }
+
+  // оставляем только каталоги с уровнем глубины "2", т.е. те что сразу в /catalog/
+  const workbooks = catalogArray.filter(e => e.parent === '/catalog/');
+
+  if (!fs.existsSync(`${__dirname}/output`)) {
+    fs.mkdirSync(`${__dirname}/output`);
+  }
+
+  for (let i = 0; i < workbooks.length; i++) {
+
+    excelManager.newBook();
+
+    if (workbooks[i].products && Array.isArray(workbooks[i].products)) {
+
+      // продукты находятся в корне подкаталога
+      excelManager.newWorksheet(workbooks[i].title);
+      excelManager.addProductRows(workbooks[i].products);
+
+    } else {
+
+      const subCatalogs = catalogArray.filter(e => e.parent === workbooks[i].code);
+
+      for (let j = 0; j < subCatalogs.length; j++) {
+
+        if (!subCatalogs[j].products || !Array.isArray(subCatalogs[j].products)) continue;
+
+        excelManager.newWorksheet(subCatalogs[j].title);
+        excelManager.addProductRows(subCatalogs[j].products);
+
+      }
+
+    }
+
+    try {
+      await excelManager.toFile(`${__dirname}/output/${workbooks[i].title}.xlsx`);
+    } catch (e) {
+      console.error('Не удалось записать файл');
+      console.error(e);
+    }
+
+  }
+
+  console.log(_colors.green('Done!'));
 
 }
 init();

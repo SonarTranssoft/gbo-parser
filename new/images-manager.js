@@ -1,6 +1,7 @@
 const fs = require('fs');
 const axios = require('axios');
 const sharp = require('sharp');
+const tunnel = require('tunnel');
 
 /** Обработчик изображений */
 module.exports = class ImagesManager {
@@ -10,14 +11,14 @@ module.exports = class ImagesManager {
 
   client = axios.create({
     baseURL: 'https://www.mirgaza.ru',
-    httpsAgent: tunnel.httpsOverHttp({
-      proxy: {
-        host: '193.31.103.37',
-        port: 9477,
-        proxyAuth: 'CcxHv8:6ymQqU'
-      }
-    }),
-    proxy: false
+    // httpsAgent: tunnel.httpsOverHttp({
+    //   proxy: {
+    //     host: '193.31.103.37',
+    //     port: 9477,
+    //     proxyAuth: 'CcxHv8:6ymQqU'
+    //   }
+    // }),
+    // proxy: false
   });
 
   constructor() {
